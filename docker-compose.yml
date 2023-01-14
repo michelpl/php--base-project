@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    container_name: db
+    environment:
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: hcdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - app-network
+  webapi:
+    container_name: webapi
+    deploy:
+      mode: replicated
+    depends_on:
+      - db
+    build: ./api
+    ports:
+      - "8000:80"
+    networks:
+      - app-network
+    volumes:
+      - ./src:/var/www/html:rw
+      
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+
+#Docker volumes
+volumes:
+  src:
+  dbdata:

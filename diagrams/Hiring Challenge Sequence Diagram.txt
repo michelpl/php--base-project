@@ -1,0 +1,33 @@
+title Hiring Challenge
+
+participant External request
+
+participant csv_data_api
+
+participant Cron job
+
+participant charge_api
+
+participant Database
+
+participant Customers
+
+External request->csv_data_api:send csv file
+csv_data_api->Database:save csv file
+
+Cron job->charge_api:Post request
+charge_api->Database:Get csv_data
+Database->charge_api:Return csv_data
+charge_api->Database:Create charges 
+charge_api->Database:Create charge payment data (boleto) for each charge
+
+
+Cron job->charge_api:Trigger e-mail sending
+Database<-charge_api:Get boleto list
+Database->charge_api:Return boleto list
+charge_api->Customers:Send e-mails containing boleto data to each customer
+
+
+External request->charge_api:Send a payment webhook
+charge_api->database:Save payment data (paid amount, paid by, and charge status)
+charge_api->database:Update boleto status

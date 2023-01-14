@@ -1,0 +1,38 @@
+FROM php:8.1-apache
+RUN apt -yqq update
+
+WORKDIR /var/www/html
+
+## Libraries
+RUN apt -yqq install libxml2-dev
+RUN apt -yqq install zlib1g-dev
+RUN apt -yqq install unzip
+RUN apt -yqq install libpng-dev
+RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libldap2-dev 
+
+## Dependencies
+RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install mysqli
+
+#Cron
+RUN apt-get install -y cron
+
+## GIT
+RUN apt-get install git -y
+
+## Others
+RUN a2enmod rewrite
+
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+##COMPOSER
+RUN cd /tmp && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+RUN cd /tmp && php -r "if (hash_file('sha384', 'composer-setup.php') === '55ce33d7678c5a611085589f1f3ddf8b3c52d662cd01d4ba75c0ee0459970c2200a51f492d557530c71c15d8dba01eae') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+RUN cd /tmp && php composer-setup.php
+RUN cd /tmp && php -r "unlink('composer-setup.php');"
+RUN mv /tmp/composer.phar /usr/local/bin/composer
+
+#RUN cd /var/www/html && composer update -vvv
